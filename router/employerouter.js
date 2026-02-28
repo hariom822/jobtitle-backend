@@ -1,0 +1,11 @@
+const express=require('express')
+const router=express.Router()
+const employeecontroller=require('../controller/employecontroller')
+const auth = require("../middleware/auth")
+router.post('/',auth,employeecontroller.addemployee)
+router.get('/allemployee',employeecontroller.allemployee)
+router.get('/oneemployee/:id',auth,employeecontroller.oneemployee)
+router.put('/updateemployee/:id',auth,employeecontroller.updateemployee)
+router.post('/ststusemployee/:id',auth,employeecontroller.ststusemployee)
+router.delete('/deleteemployee/:id',auth,employeecontroller.deleteemployee)
+module.exports=router
