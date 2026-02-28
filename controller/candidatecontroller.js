@@ -1,46 +1,90 @@
 const condidate = require('../model/candidatemodel');
 const user = require('../model/usermodel');
 const nodemailer = require('nodemailer');
+const bcrypt =require("bcrypt")
 require("dotenv").config()
 exports.addcandidate = async (req, res) => {
     try {
         const { name, email, phone, password, education, experience } = req.body;
+
+        // Required fields check
+        if (!name || !email || !phone || !password) {
+            return res.status(400).json({ error: "Name, email, phone, and password are required" });
+        }
+
+        // Check if user already exists
+        const existingUser = await user.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ error: "User already exists" });
+        }
+
+        // Hash password for user
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        // Create Candidate (without password)
         const newCandidate = new condidate({
             name,
             email,
             phone,
-            password,
             education,
             experience
         });
-        const userdata=new user({
-            name:name,
-            email:email,
-            phone:phone,
-            password:password,
-            role:"candidate"
-        })
-        console.log("password>>>>>>>>>>>",password)
-               const transporter = nodemailer.createTransport({
-                   service: 'gmail',
-                   auth: {
-                       user: process.env.USER_EMAIL,
-                       pass: process.env.USER_PASS,
-                   }
-               });
-        const info =transporter.sendMail({ 
-            from: process.env.USER_EMAIL,
+
+        // Create User (with hashed password)
+        const userdata = new user({
+            name,
+            email,
+            phone,
+            password: hashedPassword,
+            role: "candidate"
+        });
+
+        // Send welcome mail in nice HTML format
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.USER_EMAIL,
+                pass: process.env.USER_PASS
+            }
+        });
+
+        const info = await transporter.sendMail({
+            from: `"Job Portal Team" <${process.env.USER_EMAIL}>`,
             to: email,
-            subject: 'Welcome to Job Portal',
-            text: `Hello ${name},\n\nThank you for registering as a candidate on
-             our job portal. We are excited to have you on board!\n\nBest regards,\nJob Portal Team`
-        }); 
-        await userdata.save()
+            subject: "🎉 Welcome to Job Portal",
+            html: `
+            <div style="font-family: Arial, sans-serif; max-width:600px; margin:auto; padding:20px; border:1px solid #ddd; border-radius:10px;">
+                <h2 style="color:#0c66e4;">Welcome, ${name}!</h2>
+                <p>Thank you for registering as a candidate on our <strong>Job Portal</strong>.</p>
+                <div style="margin:20px 0; padding:15px; background:#f3f4f6; border-radius:6px;">
+                    <p><strong>Email:</strong> ${email}</p>
+                    <p><strong>Phone:</strong> ${phone}</p>
+                    <p><strong>Password:</strong> ${password}</p>
+                </div>
+                <p style="margin-top:20px;">You can now login and apply for jobs.</p>
+                <a href="http://localhost:5173/login" 
+                   style="display:inline-block; margin-top:15px; padding:10px 20px; background:#0c66e4; color:white; text-decoration:none; border-radius:5px;">
+                   Login Now
+                </a>
+                <p style="margin-top:20px; font-size:12px; color:#555;">
+                    For security, please change your password after first login.
+                </p>
+            </div>
+            `
+        });
+
+        console.log("Mail sent:", info.messageId);
+
+        // Save to database
+        await userdata.save();
         const savedCandidate = await newCandidate.save();
+
         res.status(201).json(savedCandidate);
-    }
-        catch (error) {
-        res.status(500).json({ error: 'Failed to add candidate' });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to add candidate" });
     }
 };
 
