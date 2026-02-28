@@ -1,11 +1,15 @@
 const express=require("express");
 const mongoose=require("mongoose");
 require("dotenv").config();
+const cors=require("cors");
+
 const port=process.env.PORT;
 const app=express();
 const url=process.env.MONGODBURL;
 app.use(express.json());
+app.use(cors());
 mongoose.connect(url)
+
 .then(()=>console.log("connection to mongodb "))
 .catch((err)=>console.log("error connection to mongodb",err));
 
