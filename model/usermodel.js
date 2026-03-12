@@ -24,8 +24,8 @@ const userSchema=new mongoose.Schema({
   },
   role:{
     type:String,
-    enum: ["admin", "employer", "candidate"],
+    enum: ["admin", "employee", "candidate","companie"],
     default: "candidate"
   },
 });
-module.exports =mongoose.model('User',userSchema);
+module.exports =mongoose.model('users',userSchema);

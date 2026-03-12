@@ -1,4 +1,6 @@
 const User=require('../model/usermodel');
+const condidate=require('../model/candidatemodel');
+const companiemodel=require('../model/companiymodel');
 const bcrypt=require("bcrypt")
 const jwt=require("jsonwebtoken");
 require("dotenv").config()
@@ -134,16 +136,27 @@ exports.loginuser=async(req,res)=>{
         if(!email || !password){
             return res.status(400).json({error:"all filed are required"});
         }
+
+        const condidatedata=await condidate.findOne({email:email});
+        const companiedata=await companiemodel.findOne({email:email});
+        console.log("condidatedata",condidatedata);
+        console.log("condidate",condidatedata);
         const user=await User.findOne({email:email});
+        console.log("user",user); 
         if(!user){
             return res.status(400).json({error:"user not found"});
         }
         const dbpassword = user.password;
         const isMatch = await bcrypt.compare(password, dbpassword);
+        console.log("isMatch",isMatch);
+        if(user.role === "companie" && companiedata?.status !== "approved"){
+        return res.status(400).json({error:"Company is not approved by admin"})
+        }
         if (isMatch) {
             const token = jwt.sign({ email}, secretkey,{expiresIn :'1h'});
             console.log(token);
-           return res.status(200).json({ message: "Login successful",token: token,id:user._id,role:user.role,email:user.email});
+           return res.status(200).json({ message: "Login successful",token: token,id:user._id,role:user.role,
+            email:user.email,condidateId:condidatedata?._id ,companieId:companiedata?._id});
         }else{
             return res.status(400).json({ message: "Invalid password" });
         }

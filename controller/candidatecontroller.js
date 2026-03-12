@@ -1,11 +1,12 @@
 const condidate = require('../model/candidatemodel');
 const user = require('../model/usermodel');
+const information = require('../model/fullinformation');
 const nodemailer = require('nodemailer');
 const bcrypt =require("bcrypt")
 require("dotenv").config()
 exports.addcandidate = async (req, res) => {
     try {
-        const { name, email, phone, password, education, experience } = req.body;
+        const { name, email, phone, password,workstatus } = req.body;
 
         // Required fields check
         if (!name || !email || !phone || !password) {
@@ -27,8 +28,7 @@ exports.addcandidate = async (req, res) => {
             name,
             email,
             phone,
-            education,
-            experience
+            workstatus
         });
 
         // Create User (with hashed password)
@@ -79,9 +79,27 @@ exports.addcandidate = async (req, res) => {
         // Save to database
         await userdata.save();
         const savedCandidate = await newCandidate.save();
+        console.log("Candidate saved:", savedCandidate);
+        const fullInfo = new information({
+    candidateId: savedCandidate._id,
+    dateOfBirth: null,
+    gender: "Male",
+    education: {
+        degree: "",
+        college: "",
+        year: ""
+    },
+    experience: [],
+    skills: [],
+    linkedin: "",
+    github: "",
+    portfolio: "",
+    bio: "",
+    profileImage: ""
+});
 
-        res.status(201).json(savedCandidate);
-
+await fullInfo.save();
+        res.status(201).json({ candidate: savedCandidate, fullInfoId: fullInfo._id });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Failed to add candidate" });

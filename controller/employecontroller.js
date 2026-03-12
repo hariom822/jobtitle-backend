@@ -31,10 +31,11 @@ exports.addemployee=async(req,res)=>{
         const password = generatePassword(6);
          const salt = await bcrypt.genSalt(10);
                 const hashedPassword = await bcrypt.hash(password, salt);
-
-      const data1 =req.files;
+      console.log(">>>profileimage", req.files.profileimage);
+      const data1 =req.files.profileimage;
       const imagee = await uploadimg(data1);
-       const data={name,email,phone,salary,menttype,pannumbert,addherimage:imagee[0].url,profileimage:imagee[1].url,password:hashedPassword}
+      console.log(">>>imagee", imagee);
+       const data={name,email,phone,salary,menttype,pannumbert,password:hashedPassword,addherimage:imagee[0].url,profileimage:imagee[1].url}
        console.log(">>>data",data)
               const transporter=nodemailer.createTransport({
             service:"gmail",

@@ -7,4 +7,5 @@ router.get('/all', companiecontroller.allcompanie);
 router.get('/onecompanie/:id', companiecontroller.onecompanie);
 router.post('/update/:id', companiecontroller.updatecompanie);
 router.delete('/delete/:id', companiecontroller.deletecompanie);
+router.post("/panding/:id",companiecontroller.companyAction)
 module.exports = router;
